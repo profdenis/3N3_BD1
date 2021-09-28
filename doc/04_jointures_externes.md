@@ -117,16 +117,16 @@ Michel Turcot  420BD1      002
 Michel Turcot  420PRA      001         85.0
 ```
 
-La « table de gauche » est la table avant le `LEFT JOIN`, et la « table de
+La « table de gauche » est la table avant le `LEFT OUTER JOIN`, et la « table de
 droite » est la table après.
 
 Les colonnes de la table de droite seront remplacées par la valeur `NULL`.
 
-Il y a 3 types de Outer join : `LEFT`, `RIGHT`, et `FULL` . SQL ne supporte
-que le `LEFT`.
+Il y a 3 types de Outer join : `LEFT`, `RIGHT`, et `FULL` . SQL ne supporte que
+le `LEFT`.
 
-SQL ne supporte pas le `RIGHT OUTER JOIN`. Mais il suffit d'inverser les
-tables pour le simuler. Il est d'ailleurs recommandé de ne pas utiliser
+SQL ne supporte pas le `RIGHT OUTER JOIN`. Mais il suffit d'inverser les tables
+pour le simuler. Il est d'ailleurs recommandé de ne pas utiliser
 de `right outer join` même lorsqu'il est supporté, car ça devient mélangeant. Il
 est plutôt recommandé de simplement inverser l'ordre des tables et de prendre le
 left.
@@ -268,8 +268,9 @@ enregistrements de A et tous les enregistrements de B.
 
 ```genericsql
 SELECT *
-FROM A FULL OUTER JOIN b
-ON A.x = B.y;
+FROM A
+         FULL OUTER JOIN b
+                         ON A.x = B.y;
 ```
 
 retourne `(1, null), (2, null), (3,3), (4, 4), (null, 5), (null, 6)`
@@ -341,10 +342,10 @@ FROM Professeurs p
 
 Il est à noter l'utilisation des alias de table. En effet, étant donné que la
 table professeurs se retrouve deux fois dans la requête, il serait impossible de
-savoir laquelle des deux instances à laquelle nous voulons référer si nous n'avions
-pas d'alias de table. Ici, `p` indique que nous désirons utiliser cette instance
-de la table pour représenter les professeurs, et `c` pour représenter les
-coordonnateurs.
+savoir laquelle des deux instances à laquelle nous voulons référer si nous
+n'avions pas d'alias de table. Ici, `p` indique que nous désirons utiliser cette
+instance de la table pour représenter les professeurs, et `c` pour représenter
+les coordonnateurs.
 
 Le ON cause souvent problème. Est-ce que je dois mettre
 `p.coordonnateur = c.codeprof`, ou `p.codeprof = c.coordonnateur` ? Pour trouver
@@ -362,9 +363,9 @@ Exemple : Je veux le nom du professeur ainsi que le nom des cours qu'il donne.
 
 ````sql
  SELECT p.nom, c.nom
- FROM (Professeurs p LEFT JOIN Groupes g
+ FROM (Professeurs p LEFT OUTER JOIN Groupes g
      ON p.CodeProf = g.CodeProf)
-          LEFT JOIN Cours c
+          LEFT OUTER JOIN Cours c
                     ON c.Sigle = g.Sigle;
 ````
 
@@ -379,9 +380,9 @@ Pour changer ces noms générés, il faut utiliser la clause `AS`
 
 ```sql
 SELECT p.nom AS 'Nom du Prof', c.nom AS 'Nom du cours'
-FROM (Professeurs p LEFT JOIN Groupes g
+FROM (Professeurs p LEFT OUTER JOIN Groupes g
     ON p.CodeProf = g.CodeProf)
-         LEFT JOIN Cours c
+         LEFT OUTER JOIN Cours c
                    ON c.Sigle = g.Sigle;
 ```
 
@@ -416,15 +417,14 @@ dans la table `Professeurs`
 ```sql
 SELECT p.Nom, g.Sigle
 FROM Professeurs p
-         JOIN Groupes g
-              ON p.CodeProf = g.CodeProf;
+         INNER JOIN Groupes g
+                    ON p.CodeProf = g.CodeProf;
 ```
 
 </details>
 
-La solution proposée a un défaut : que se passe-t-il si un prof a deux groupes 
-pour
-le même cours ?
+La solution proposée a un défaut : que se passe-t-il si un prof a deux groupes
+pour le même cours ?
 
 <details>
          <summary>Réponse</summary>  
@@ -442,8 +442,8 @@ Ajouter la clause DISTINCT
 ```sql
 SELECT DISTINCT p.Nom, g.Sigle
 FROM Professeurs p
-         JOIN Groupes g
-              ON p.CodeProf = g.CodeProf;
+         INNER JOIN Groupes g
+                    ON p.CodeProf = g.CodeProf;
 ```
 
 </details>
@@ -456,12 +456,12 @@ Comment faire pour régler ce problème ?
 <details>
          <summary>Réponse</summary>  
 
-Faire un `LEFT JOIN`
+Faire un `LEFT OUTER JOIN`
 
 ```sql
 SELECT DISTINCT p.Nom, g.Sigle
 FROM Professeurs p
-         LEFT JOIN Groupes g
+         LEFT OUTER JOIN Groupes g
                    ON p.CodeProf = g.CodeProf;
 ```
 
@@ -514,9 +514,8 @@ Vous devez trouver deux façons différentes de faire cette requête.
 
 ```sql
 SELECT e.nom, n.Sigle, n.NoteFinale
-FROM Etudiants e,
-     Notes n
-WHERE e.CodePermanent = n.CodePermanent;
+FROM Etudiants e
+         INNER JOIN Notes N on e.CodePermanent = N.CodePermanent;
 ```
 
 </details>
@@ -543,35 +542,31 @@ Listez le nom des profs, le sigle et le nom de leur cours
 - Le nom du cours est dans la table Cours.
 - Le lien entre Cours et Groupes se fait par le Sigle.
 
-Utilisez le Natural left join
-
 <details>
     <summary>Réponse</summary>  
 
 ```sql
 SELECT DISTINCT p.Nom AS Prof, g.Sigle AS Sigle, c.Nom AS Cours
-FROM (Professeurs p
-    NATURAL LEFT JOIN Groupes g)
-         LEFT JOIN Cours c
-                   ON c.sigle = g.sigle
+FROM Professeurs p
+         LEFT OUTER JOIN Groupes g ON p.CodeProf = g.CodeProf
+         LEFT OUTER JOIN Cours c ON c.sigle = g.sigle
 ORDER BY g.Sigle;
 ```
 
 </details>
 
 Quelle serait la solution si je ne désire pas lister les profs n'ayant pas de
-cours en spécifiant la clé de jointure ?
+cours ?
 
 <details>
       <summary>Réponse</summary>  
 
 ```sql
 SELECT DISTINCT p.Nom AS Prof, g.Sigle AS Sigle, c.Nom AS Cours
-FROM Professeurs p,
-     Groupes g,
-     COURS c
-WHERE p.CodeProf = g.CodeProf
-  AND g.Sigle = c.Sigle;
+FROM Professeurs p
+         INNER JOIN Groupes g ON p.CodeProf = g.CodeProf
+         INNER JOIN Cours c ON c.sigle = g.sigle
+ORDER BY g.Sigle;
 ```
 
 Qu'est ce qui a disparu ?
@@ -595,14 +590,11 @@ SELECT DISTINCT p.Nom   AS Prof,
                 g.Sigle AS Sigle,
                 c.Nom   AS Cours,
                 e.Nom   AS Etudiant
-FROM (((Professeurs p NATURAL LEFT JOIN Groupes g)
-    LEFT JOIN Cours c
-    ON c.sigle = g.sigle)
-    LEFT JOIN Notes n
-    ON n.Sigle = g.Sigle
-        AND n.Groupe = g.Groupe)
-         LEFT JOIN Etudiants e
-                   ON n.CodePermanent = e.CodePermanent;
+FROM Professeurs p
+         LEFT OUTER JOIN Groupes g ON p.CodeProf = g.CodeProf
+         LEFT OUTER JOIN Cours c ON c.sigle = g.sigle
+         LEFT OUTER JOIN Notes n ON n.Sigle = g.Sigle AND n.Groupe = g.Groupe
+         LEFT OUTER JOIN Etudiants e ON n.CodePermanent = e.CodePermanent;
 ```
 
 Notez que même si je n'avais pas demandé d'afficher le sigle du cours provenant
@@ -642,10 +634,9 @@ Listez la note finale de tous les étudiants qui ont une date de diplôme égal 
 
 ```sql
 SELECT e.Nom, n.Sigle, n.Groupe, n.NoteFinale
-FROM Etudiants e,
-     Notes n
+FROM Etudiants e
+         INNER JOIN Notes n ON e.CodePermanent = n.CodePermanent
 WHERE e.DateDiplome = '2013-07-31'
-  AND e.CodePermanent = n.CodePermanent
 ORDER BY e.Nom;
 ```
 
@@ -654,44 +645,20 @@ ORDER BY e.Nom;
 ### Question 7
 
 Listez les sigles de cours et les profs assigné(s) à ce cours. Un même groupe de
-sigles/profs ne devrait pas apparaître deux fois. (partez de la table Groupes pour
-obtenir le sigle)
+sigles/profs ne devrait pas apparaître deux fois. (partez de la table Groupes
+pour obtenir le sigle)
 
 <details>
-    <summary>Réponse 1</summary>  
+    <summary>Réponse</summary>  
 
 ````sql
 SELECT DISTINCT g.Sigle, p.Nom
 FROM Groupes g
-         NATURAL INNER JOIN Professeurs p;
+         INNER JOIN Professeurs p ON g.CodeProf = p.CodeProf;
 ````
 
 </details>
 
-<details>
-    <summary>Réponse 2</summary>  
-
-````sql
- SELECT DISTINCT g.Sigle, p.Nom
- FROM Groupes g,
-      Professeurs p
- WHERE g.CodeProf = p.CodeProf;
-````
-
-</details>
-
-
-<details>
-    <summary>Réponse 3</summary>  
-
-````sql
-SELECT DISTINCT g.Sigle, p.Nom
-FROM Groupes g
-         JOIN Professeurs p
-              ON g.CodeProf = p.CodeProf;
-````
-
-</details>
 
 ### Question 8
 
@@ -707,12 +674,10 @@ supérieure à 85.
 
 ````sql
 SELECT DISTINCT p.Nom AS Prof, e.Nom AS Etudiant
-FROM (((Professeurs p NATURAL LEFT JOIN Groupes g)
-    LEFT JOIN Cours c
-    ON c.sigle = g.sigle)
-    LEFT JOIN Notes n
-    ON n.Sigle = g.Sigle
-        AND n.Groupe = g.Groupe)
+FROM Professeurs p
+         LEFT JOIN Groupes g ON p.CodeProf = g.CodeProf
+         LEFT JOIN Cours c ON c.sigle = g.sigle
+         LEFT JOIN Notes n ON n.Sigle = g.Sigle AND n.Groupe = g.Groupe
          LEFT JOIN Etudiants e
                    ON n.CodePermanent = e.CodePermanent
 WHERE n.NoteFinale > 85;
@@ -720,21 +685,3 @@ WHERE n.NoteFinale > 85;
 
 </details>
 
-<details>
-    <summary>Réponse 2</summary>
-
-   ````sql
-   SELECT DISTINCT p.Nom AS Prof, e.Nom AS Etudiant
-   FROM Professeurs p,
-        Groupes g,
-        Cours c,
-        Etudiants e,
-        Notes n
-   WHERE p.CodeProf = g.CodeProf
-     AND g.Sigle = n.Sigle
-     AND g.Groupe = n.Groupe
-     AND n.CodePermanent = e.CodePermanent
-     AND n.NoteFinale > 85;
-   ````
-
-</details>
