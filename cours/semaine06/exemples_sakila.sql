@@ -65,6 +65,10 @@ select fc.film_id, f.title, count(fc.category_id) as nb_categories
 from film_category fc inner join film f on fc.film_id = f.film_id
 group by fc.film_id, f.title;
 
+select f.film_id, f.title, count(fc.category_id) as nb_categories
+from film f left join film_category fc on f.film_id = fc.film_id
+group by f.film_id, f.title;
+
 -- 10. nombre de films
 select count(film_id) nb_films
 from film;
