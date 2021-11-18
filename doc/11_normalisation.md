@@ -5,8 +5,7 @@ base de données. Ce processus comprend la création de tables et l'établisseme
 de relations entre celles-ci conformément à des règles conçues à la fois pour
 protéger les données et pour rendre la base de données plus flexible grâce à
 l'élimination de la redondance et des dépendances incohérentes.
-(source : [http://support.microsoft.com/kb/283878/fr](http://support.
-microsoft.com/kb/283878/fr))
+(source : [http://support.microsoft.com/kb/283878/fr](http://support.microsoft.com/kb/283878/fr))
 
 Il existe plusieurs règles pour faire l'organisation de l'information. Ces
 règles sont connues sous le nom de « forme normale ». Nous étudierons les 3
